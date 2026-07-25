@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Study Hall Register</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --paper:#EEF0EA;
+    --paper-line:#DDD9C9;
+    --navy:#1B2A4A;
+    --navy-light:#2C4066;
+    --ochre:#C08829;
+    --ochre-light:#E8C387;
+    --green:#2F7D4F;
+    --green-bg:#E4F0E7;
+    --red:#B23A34;
+    --red-bg:#F6E5E3;
+    --amber:#B8791A;
+    --amber-bg:#F5E9D2;
+    --ink:#1B2A4A;
+    --ink-soft:#5C6470;
+    --font-display:Georgia,'Times New Roman',serif;
+    --font-mono:'Courier New',Courier,monospace;
+    --font-body:-apple-system,'Segoe UI',Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    background-image:
+      repeating-linear-gradient(transparent, transparent 27px, var(--paper-line) 28px);
+    font-family:var(--font-body);
+    color:var(--ink);
+    padding:0 0 60px 0;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+
+  /* ===== Header ===== */
+  header{
+    background:var(--navy);
+    color:#F3EFE2;
+    padding:28px 0 24px 0;
+    border-bottom:6px double var(--ochre);
+    margin-bottom:26px;
+  }
+  header .inner{max-width:920px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:center;gap:14px;}
+  .seal{
+    width:54px;height:54px;border-radius:50%;
+    border:2px solid var(--ochre-light);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display);font-weight:bold;font-size:20px;
+    color:var(--ochre-light);
+    flex-shrink:0;
+  }
+  header h1{font-family:var(--font-display);font-size:26px;margin:0;letter-spacing:0.5px;}
+  header .sub{font-size:12.5px;color:#C7CBD8;margin-top:3px;letter-spacing:1px;text-transform:uppercase;}
+  header .today{font-family:var(--font-mono);font-size:13px;color:#C7CBD8;text-align:right;}
+  header .today b{color:#F3EFE2;font-size:15px;display:block;}
+
+  /* ===== Stats ===== */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:26px;}
+  .stat{
+    background:#fff;border:1px solid var(--paper-line);border-left:4px solid var(--ochre);
+    padding:14px 16px;
+  }
+  .stat .n{font-family:var(--font-display);font-size:26px;font-weight:bold;color:var(--navy);}
+  .stat .l{font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--ink-soft);margin-top:2px;}
+
+  /* ===== Section titles ===== */
+  .section-title{
+    font-family:var(--font-display);font-size:15px;text-transform:uppercase;letter-spacing:1.5px;
+    color:var(--navy);border-bottom:2px solid var(--navy);padding-bottom:6px;margin:30px 0 14px 0;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+
+  /* ===== Reminders ===== */
+  #reminders{display:flex;flex-direction:column;gap:10px;}
+  .reminder-empty{color:var(--ink-soft);font-size:13.5px;font-style:italic;padding:10px 0;}
+  .reminder-card{
+    background:var(--red-bg);border:1px solid #E0BEBA;padding:12px 14px;
+    display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  }
+  .reminder-card.amber{background:var(--amber-bg);border-color:#E4CFA0;}
+  .reminder-info b{font-family:var(--font-display);}
+  .reminder-info .days{font-family:var(--font-mono);font-size:12px;color:var(--red);}
+  .reminder-card.amber .days{color:var(--amber);}
+  .wa-btn{
+    background:#2F7D4F;color:#fff;border:none;padding:8px 14px;font-size:12.5px;font-weight:bold;
+    cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;
+  }
+  .wa-btn:hover{background:#256640;}
+
+  /* ===== Form ===== */
+  .form-box{background:#fff;border:1px solid var(--paper-line);padding:18px 20px;margin-bottom:8px;}
+  .form-grid{display:grid;grid-template-columns:1.6fr 1.2fr 1.1fr 0.8fr 1.1fr 1fr auto;gap:10px;align-items:end;}
+  .field label{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:0.6px;color:var(--ink-soft);margin-bottom:4px;}
+  .field input,.field select{
+    width:100%;padding:8px 9px;border:1px solid #C9C4B0;background:#FCFBF6;
+    font-family:var(--font-mono);font-size:13.5px;color:var(--ink);
+  }
+  .field input:focus,.field select:focus{outline:2px solid var(--ochre);outline-offset:1px;}
+  .add-btn{
+    background:var(--navy);color:#F3EFE2;border:none;padding:9px 18px;font-size:13px;font-weight:bold;
+    cursor:pointer;letter-spacing:0.5px;white-space:nowrap;
+  }
+  .add-btn:hover{background:var(--navy-light);}
+  .form-err{color:var(--red);font-size:12px;margin-top:8px;}
+
+  /* ===== Search ===== */
+  .search-row{margin:16px 0;}
+  .search-row input{
+    width:100%;padding:9px 12px;border:1px solid #C9C4B0;background:#fff;
+    font-size:13.5px;font-family:var(--font-body);
+  }
+
+  /* ===== Student stub (hall-ticket style) ===== */
+  .stub{
+    background:#fff;border:1px solid var(--paper-line);margin-bottom:12px;position:relative;
+    display:grid;grid-template-columns:70px 1fr auto;gap:0;
+  }
+  .stub::before{
+    content:"";position:absolute;left:70px;top:0;bottom:0;width:0;
+    border-left:2px dashed #C9C4B0;
+  }
+  .stub-roll{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:10px 4px;background:var(--navy);color:#F3EFE2;
+  }
+  .stub-roll .lbl{font-size:8.5px;text-transform:uppercase;letter-spacing:0.5px;color:#9AA3BB;}
+  .stub-roll .num{font-family:var(--font-mono);font-size:15px;font-weight:bold;}
+  .stub-main{padding:12px 16px;}
+  .stub-main .name{font-family:var(--font-display);font-size:17px;font-weight:bold;color:var(--navy);}
+  .stub-meta{display:flex;gap:18px;flex-wrap:wrap;margin-top:5px;font-size:12px;color:var(--ink-soft);font-family:var(--font-mono);}
+  .stub-actions{padding:12px 16px;display:flex;flex-direction:column;align-items:flex-end;gap:8px;justify-content:center;}
+  .stamp{
+    font-family:var(--font-display);font-weight:bold;font-size:11.5px;letter-spacing:1px;
+    border:2px solid; padding:3px 10px;border-radius:4px;transform:rotate(-4deg);
+    text-transform:uppercase;
+  }
+  .stamp.paid{color:var(--green);border-color:var(--green);}
+  .stamp.due{color:var(--amber);border-color:var(--amber);}
+  .stamp.overdue{color:var(--red);border-color:var(--red);}
+  .btn-row{display:flex;gap:6px;}
+  .mini-btn{
+    background:var(--paper);border:1px solid #C9C4B0;color:var(--ink);padding:6px 10px;font-size:11.5px;
+    cursor:pointer;text-decoration:none;
+  }
+  .mini-btn:hover{background:#E4E0CE;}
+  .mini-btn.danger{color:var(--red);}
+  .mini-btn.wa{background:var(--green);color:#fff;border-color:var(--green);}
+  .mini-btn.wa:hover{background:#256640;}
+  .mini-btn:disabled{opacity:0.5;cursor:not-allowed;background:var(--paper);}
+  .mini-btn:disabled:hover{background:var(--paper);}
+
+  /* ===== Modal (replaces native confirm/prompt, which browsers block in embedded frames) ===== */
+  .modal-overlay{
+    display:none;position:fixed;inset:0;background:rgba(27,42,74,0.55);
+    align-items:center;justify-content:center;z-index:1000;padding:20px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-box{
+    background:#FCFBF6;border:1px solid var(--paper-line);border-top:4px solid var(--ochre);
+    max-width:420px;width:100%;padding:22px 24px;box-shadow:0 10px 30px rgba(0,0,0,0.25);
+    max-height:80vh;overflow-y:auto;
+  }
+  .modal-box h3{font-family:var(--font-display);font-size:17px;margin:0 0 10px 0;color:var(--navy);}
+  .modal-box p{font-size:13.5px;color:var(--ink-soft);margin:0 0 16px 0;line-height:1.5;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:6px;}
+  .modal-list{list-style:none;margin:0 0 16px 0;padding:0;display:flex;flex-direction:column;gap:6px;}
+  .modal-list li button{
+    width:100%;text-align:left;background:#fff;border:1px solid #C9C4B0;padding:9px 12px;font-size:13px;
+    cursor:pointer;font-family:var(--font-body);color:var(--ink);
+  }
+  .modal-list li button:hover{background:var(--paper);border-color:var(--ochre);}
+
+  .history{padding:0 16px 14px 90px;font-size:12px;color:var(--ink-soft);border-top:1px dashed #E1DCC7;margin-top:0;}
+  .history table{width:100%;border-collapse:collapse;margin-top:8px;font-family:var(--font-mono);}
+  .history td{padding:3px 6px 3px 0;}
+
+  .empty-state{padding:40px 10px;text-align:center;color:var(--ink-soft);font-style:italic;}
+
+  /* ===== Header icon buttons ===== */
+  .icon-btn{
+    background:transparent;border:1px solid #4A5B82;color:#D9DCE6;padding:7px 12px;font-size:12px;
+    cursor:pointer;letter-spacing:0.5px;display:inline-flex;align-items:center;gap:6px;
+  }
+  .icon-btn:hover{background:#28395E;border-color:var(--ochre-light);color:#fff;}
+
+  /* ===== Settings panel ===== */
+  .panel{background:#fff;border:1px solid var(--paper-line);padding:18px 20px;margin-bottom:8px;display:none;}
+  .panel.open{display:block;}
+  .panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;}
+  .panel-grid .field.span2{grid-column:1/-1;}
+  .panel-save-row{margin-top:14px;display:flex;align-items:center;gap:12px;}
+  .panel-saved-msg{font-size:12px;color:var(--green);opacity:0;transition:opacity .3s;}
+  .panel-saved-msg.show{opacity:1;}
+
+  /* ===== Cabin map ===== */
+  .cabin-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:8px;margin-bottom:8px;
+  }
+  .cabin{
+    aspect-ratio:1;border:2px solid;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    cursor:pointer;font-family:var(--font-mono);user-select:none;transition:transform .1s;
+  }
+  .cabin:hover{transform:scale(1.05);}
+  .cabin.free{background:var(--green-bg);border-color:var(--green);color:var(--green);}
+  .cabin.occupied{background:var(--red-bg);border-color:var(--red);color:var(--red);}
+  .cabin .cnum{font-size:14px;font-weight:bold;}
+  .cabin .cname{font-size:8px;text-align:center;padding:0 3px;line-height:1.15;margin-top:2px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cabin-legend{display:flex;gap:18px;font-size:11.5px;color:var(--ink-soft);margin-bottom:14px;align-items:center;}
+  .legend-swatch{display:inline-block;width:11px;height:11px;border:2px solid;margin-right:5px;vertical-align:middle;}
+  .legend-swatch.free{background:var(--green-bg);border-color:var(--green);}
+  .legend-swatch.occupied{background:var(--red-bg);border-color:var(--red);}
+  .cabin-badge{
+    font-family:var(--font-mono);font-size:11px;border:1px solid #C9C4B0;padding:2px 8px;color:var(--ink-soft);
+  }
+  .cabin-badge.assigned{border-color:var(--navy);color:var(--navy);font-weight:bold;}
+
+  @media(max-width:640px){
+    .form-grid{grid-template-columns:1fr 1fr;}
+    .panel-grid{grid-template-columns:1fr;}
+    .stats{grid-template-columns:1fr 1fr;}
+    .stub{grid-template-columns:56px 1fr;}
+    .stub-actions{grid-column:1/-1;align-items:flex-start;padding-top:0;}
+    .cabin-grid{grid-template-columns:repeat(auto-fill,minmax(56px,1fr));}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="inner">
+    <div class="brand">
+      <div class="seal" id="sealInitials">SH</div>
+      <div>
+        <h1 id="hallNameDisplay">Study Hall Register</h1>
+        <div class="sub" id="hallAddressDisplay">Government Exam Preparation Centre</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div class="today">Today<b id="todayDate">-</b></div>
+      <button class="icon-btn" id="settingsToggle">⚙ Settings</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="section-title" style="margin-top:0;">Settings &amp; Profile</div>
+  <div class="panel" id="settingsPanel">
+    <div class="panel-grid">
+      <div class="field"><label>Study Hall Name</label><input id="sHallName" placeholder="e.g. Sunrise Study Hall"></div>
+      <div class="field"><label>Owner / Manager Name</label><input id="sOwnerName" placeholder="e.g. Priya Sharma"></div>
+      <div class="field"><label>Contact Phone</label><input id="sOwnerPhone" placeholder="9876543210" maxlength="10"></div>
+      <div class="field"><label>Default Monthly Fee ₹</label><input id="sDefaultFee" type="number"></div>
+      <div class="field"><label>Total Cabins / Seats</label><input id="sCabinCount" type="number" min="0"></div>
+      <div class="field span2"><label>Address</label><input id="sAddress" placeholder="e.g. Near RTC Bus Stand, Uppal Kalan"></div>
+    </div>
+    <div class="panel-save-row">
+      <button class="add-btn" id="settingsSaveBtn">Save Settings</button>
+      <span class="panel-saved-msg" id="settingsSavedMsg">Saved ✓</span>
+    </div>
+    <div style="border-top:1px dashed #E1DCC7;margin-top:16px;padding-top:14px;">
+      <label style="display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:0.6px;color:var(--ink-soft);margin-bottom:8px;">Backup</label>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button class="mini-btn" id="exportBtn">⬇ Export Data (JSON)</button>
+        <button class="mini-btn" id="importBtn">⬆ Import Data</button>
+        <input type="file" id="importFile" accept="application/json" style="display:none;">
+      </div>
+      <p style="font-size:11.5px;color:var(--ink-soft);margin:8px 0 0 0;">Your data is saved automatically in this app, but keeping a downloaded backup is a good habit in case you clear your browser data.</p>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="n" id="statTotal">0</div><div class="l">Total Students</div></div>
+    <div class="stat"><div class="n" id="statPaid">0</div><div class="l">Paid This Cycle</div></div>
+    <div class="stat"><div class="n" id="statDue">0</div><div class="l">Due / Overdue</div></div>
+    <div class="stat"><div class="n" id="statRevenue">₹0</div><div class="l">Collected (30d)</div></div>
+  </div>
+
+  <div class="section-title">Cabin Allocation <span id="cabinCountLabel" style="font-family:var(--font-mono);font-size:12px;color:var(--ink-soft);letter-spacing:0;text-transform:none;"></span></div>
+  <div class="cabin-legend">
+    <span><span class="legend-swatch free"></span>Free</span>
+    <span><span class="legend-swatch occupied"></span>Allocated (click to vacate / reassign)</span>
+  </div>
+  <div class="cabin-grid" id="cabinGrid"></div>
+
+  <div class="section-title">Reminders</div>
+  <div id="reminders"></div>
+
+  <div class="section-title">Enrol a Student</div>
+  <div class="form-box">
+    <div class="form-grid">
+      <div class="field"><label>Full Name</label><input id="fName" placeholder="e.g. Ravi Kumar"></div>
+      <div class="field"><label>Phone (10 digit)</label><input id="fPhone" placeholder="9876543210" maxlength="10"></div>
+      <div class="field"><label>Joining Date</label><input id="fJoin" type="date"></div>
+      <div class="field"><label>Monthly Fee ₹</label><input id="fFee" type="number" value="800"></div>
+      <div class="field"><label>Cabin</label><select id="fCabin"><option value="">No cabin</option></select></div>
+      <div class="field" style="min-width:150px;">
+        <label>&nbsp;</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;text-transform:none;letter-spacing:0;color:var(--ink);padding:8px 0;">
+          <input type="checkbox" id="fPaidNow" checked style="width:auto;"> Fee paid now
+        </label>
+      </div>
+      <button class="add-btn" id="addBtn">+ Enrol</button>
+    </div>
+    <div class="form-err" id="formErr"></div>
+  </div>
+
+  <div class="section-title" style="margin-top:34px;">Register <span id="countLabel" style="font-family:var(--font-mono);font-size:12px;color:var(--ink-soft);letter-spacing:0;text-transform:none;"></span></div>
+  <div class="search-row"><input id="searchBox" placeholder="Search by name or phone…"></div>
+  <div id="studentList"></div>
+
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box" id="modalBox"></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'study-hall-students';
+const defaultSettings = {
+  hallName: 'Study Hall Register',
+  ownerName: '',
+  ownerPhone: '',
+  address: 'Government Exam Preparation Centre',
+  defaultFee: 800,
+  cabinCount: 20
+};
+let state = { students: [], nextRoll: 1, settings: {...defaultSettings} };
+let loaded = false;
+let settingsOpen = false;
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function fmtDate(d){
+  const dt = new Date(d+'T00:00:00');
+  return dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+}
+function addMonths(dateStr, n){
+  const d = new Date(dateStr+'T00:00:00');
+  d.setMonth(d.getMonth()+n);
+  return d.toISOString().slice(0,10);
+}
+function daysBetween(a,b){
+  const d1 = new Date(a+'T00:00:00'), d2 = new Date(b+'T00:00:00');
+  return Math.round((d2-d1)/86400000);
+}
+
+document.getElementById('todayDate').textContent = fmtDate(todayStr());
+document.getElementById('fJoin').value = todayStr();
+
+async function loadState(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    if(res && res.value){
+      const saved = JSON.parse(res.value);
+      state = {
+        students: saved.students || [],
+        nextRoll: saved.nextRoll || 1,
+        settings: {...defaultSettings, ...(saved.settings || {})}
+      };
+      state.students.forEach(s=>{ if(s.cabin === undefined) s.cabin = null; });
+    }
+  }catch(e){
+    // no data yet
+  }
+  loaded = true;
+  populateSettingsForm();
+  render();
+}
+
+function populateSettingsForm(){
+  document.getElementById('sHallName').value = state.settings.hallName;
+  document.getElementById('sOwnerName').value = state.settings.ownerName;
+  document.getElementById('sOwnerPhone').value = state.settings.ownerPhone;
+  document.getElementById('sDefaultFee').value = state.settings.defaultFee;
+  document.getElementById('sCabinCount').value = state.settings.cabinCount;
+  document.getElementById('sAddress').value = state.settings.address;
+  document.getElementById('fFee').value = state.settings.defaultFee;
+}
+
+async function saveState(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+  }catch(e){
+    console.error('Save failed', e);
+  }
+}
+
+function studentStatus(s){
+  const days = daysBetween(todayStr(), s.nextDue); // positive = due in future
+  if(days < 0) return {label:'Overdue', cls:'overdue', days};
+  if(days <= 5) return {label:'Due Soon', cls:'due', days};
+  return {label:'Active', cls:'paid', days};
+}
+
+function waLink(s){
+  const status = studentStatus(s);
+  const msg = `Namaste ${s.name}, this is a reminder from Study Hall that your monthly fee of Rs.${s.fee} was due on ${fmtDate(s.nextDue)}. Kindly pay at your earliest convenience. Thank you!`;
+  return `https://wa.me/91${s.phone}?text=${encodeURIComponent(msg)}`;
+}
+
+function invoiceNumber(s, paymentIndex){
+  return `INV-${String(s.rollNo).padStart(3,'0')}-${String(paymentIndex+1).padStart(3,'0')}`;
+}
+
+function invoiceMessage(s, payment, paymentIndex){
+  const hall = state.settings.hallName || 'Study Hall';
+  const addr = state.settings.address ? `\n${state.settings.address}` : '';
+  const ownerLine = state.settings.ownerPhone ? `\nContact: ${state.settings.ownerPhone}` : '';
+  return `*${hall}*${addr}${ownerLine}\n`
+    + `——————————————\n`
+    + `*PAYMENT RECEIPT*\n`
+    + `Invoice: ${invoiceNumber(s, paymentIndex)}\n`
+    + `——————————————\n`
+    + `Student: ${s.name}\n`
+    + `Roll No: ${s.rollNo}${s.cabin ? `\nCabin: ${s.cabin}` : ''}\n`
+    + `Amount Paid: Rs.${payment.amount}\n`
+    + `Payment Date: ${fmtDate(payment.date)}\n`
+    + `Next Due Date: ${fmtDate(s.nextDue)}\n`
+    + `——————————————\n`
+    + `Thank you for your payment!`;
+}
+
+function invoiceWaLink(s, payment, paymentIndex){
+  return `https://wa.me/91${s.phone}?text=${encodeURIComponent(invoiceMessage(s, payment, paymentIndex))}`;
+}
+
+function buildInvoicePDF(s, payment, paymentIndex){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt', format:'a5'});
+  const navy = [27,42,74];
+  const ochre = [192,136,41];
+  const inkSoft = [92,100,112];
+  const pageW = doc.internal.pageSize.getWidth();
+  const margin = 40;
+  let y = 50;
+
+  // Header band
+  doc.setFillColor(...navy);
+  doc.rect(0,0,pageW,72,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont('times','bold'); doc.setFontSize(18);
+  doc.text(state.settings.hallName || 'Study Hall', margin, 32);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  doc.setTextColor(220,224,232);
+  if(state.settings.address) doc.text(state.settings.address, margin, 48);
+  if(state.settings.ownerPhone) doc.text('Contact: ' + state.settings.ownerPhone, margin, 60);
+
+  y = 100;
+  doc.setTextColor(...navy);
+  doc.setFont('times','bold'); doc.setFontSize(15);
+  doc.text('PAYMENT RECEIPT', margin, y);
+  doc.setDrawColor(...ochre); doc.setLineWidth(1.2);
+  doc.line(margin, y+6, pageW-margin, y+6);
+
+  y += 28;
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  doc.setTextColor(...inkSoft);
+  doc.text('Invoice No.', margin, y);
+  doc.text('Payment Date', pageW/2, y);
+  doc.setFont('helvetica','bold'); doc.setTextColor(...navy);
+  doc.text(invoiceNumber(s, paymentIndex), margin, y+14);
+  doc.text(fmtDate(payment.date), pageW/2, y+14);
+
+  y += 40;
+  doc.setDrawColor(220,216,201); doc.setLineWidth(0.7);
+  doc.line(margin, y, pageW-margin, y);
+  y += 22;
+
+  const rows = [
+    ['Student Name', s.name],
+    ['Roll No.', String(s.rollNo)],
+    ['Phone', s.phone],
+    ['Cabin', s.cabin ? String(s.cabin) : 'Not assigned'],
+    ['Amount Paid', 'Rs. ' + payment.amount],
+    ['Next Due Date', fmtDate(s.nextDue)]
+  ];
+  rows.forEach(([label, val])=>{
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...inkSoft);
+    doc.text(label, margin, y);
+    doc.setFont('helvetica','bold'); doc.setTextColor(...navy);
+    doc.text(String(val), pageW/2, y);
+    y += 20;
+  });
+
+  y += 10;
+  doc.setDrawColor(...ochre); doc.setLineWidth(1);
+  doc.line(margin, y, pageW-margin, y);
+  y += 20;
+  doc.setFont('times','italic'); doc.setFontSize(10); doc.setTextColor(...inkSoft);
+  doc.text('Thank you for your payment.', margin, y);
+
+  return doc;
+}
+
+function invoiceFilename(s, paymentIndex){
+  return `${invoiceNumber(s, paymentIndex)}_${s.name.replace(/[^a-z0-9]+/gi,'_')}.pdf`;
+}
+
+function downloadInvoicePDF(s, payment, paymentIndex){
+  const doc = buildInvoicePDF(s, payment, paymentIndex);
+  doc.save(invoiceFilename(s, paymentIndex));
+}
+
+function downloadHistoryInvoice(studentId, paymentIndex){
+  const s = state.students.find(x=>x.id===studentId);
+  if(!s) return;
+  const payment = s.payments[paymentIndex];
+  if(!payment) return;
+  downloadInvoicePDF(s, payment, paymentIndex);
+}
+
+function render(){
+  if(!loaded) return;
+  renderHeader();
+  renderStats();
+  renderCabins();
+  populateCabinSelect();
+  renderReminders();
+  renderList();
+}
+
+function renderHeader(){
+  const s = state.settings;
+  document.getElementById('hallNameDisplay').textContent = s.hallName || 'Study Hall Register';
+  document.getElementById('hallAddressDisplay').textContent = s.address || 'Government Exam Preparation Centre';
+  const initials = (s.hallName || 'Study Hall').split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('') || 'SH';
+  document.getElementById('sealInitials').textContent = initials;
+}
+
+function renderCabins(){
+  const total = Math.max(0, parseInt(state.settings.cabinCount,10) || 0);
+  const grid = document.getElementById('cabinGrid');
+  const occupied = {};
+  state.students.forEach(s=>{ if(s.cabin) occupied[s.cabin] = s; });
+  const freeCount = total - Object.keys(occupied).filter(c=>Number(c)<=total).length;
+  document.getElementById('cabinCountLabel').textContent = total ? `(${freeCount} free of ${total})` : '';
+
+  if(total === 0){
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">No cabins set up yet. Add a cabin count in Settings above.</div>';
+    return;
+  }
+
+  let html = '';
+  for(let i=1;i<=total;i++){
+    const occ = occupied[i];
+    if(occ){
+      html += `<div class="cabin occupied" title="Allocated to ${escapeHtml(occ.name)} — click to vacate or reassign" onclick="cabinClicked(${i})">
+        <div class="cnum">${i}</div><div class="cname">${escapeHtml(occ.name)}</div>
+      </div>`;
+    }else{
+      html += `<div class="cabin free" title="Free — click to allocate" onclick="cabinClicked(${i})">
+        <div class="cnum">${i}</div><div class="cname">Free</div>
+      </div>`;
+    }
+  }
+  grid.innerHTML = html;
+}
+
+function populateCabinSelect(){
+  const total = Math.max(0, parseInt(state.settings.cabinCount,10) || 0);
+  const occupied = new Set(state.students.filter(s=>s.cabin).map(s=>s.cabin));
+  const sel = document.getElementById('fCabin');
+  let html = '<option value="">No cabin</option>';
+  for(let i=1;i<=total;i++){
+    if(!occupied.has(i)) html += `<option value="${i}">Cabin ${i}</option>`;
+  }
+  sel.innerHTML = html;
+}
+
+function cabinClicked(num){
+  const occupant = state.students.find(s=>s.cabin===num);
+  if(occupant){
+    openModal(`
+      <h3>Cabin ${num}</h3>
+      <p>Currently allocated to <b>${escapeHtml(occupant.name)}</b> (Roll #${occupant.rollNo}).</p>
+      <div class="modal-actions">
+        <button class="mini-btn" onclick="closeModal()">Cancel</button>
+        <button class="mini-btn danger" onclick="doVacateCabin(${num})">Vacate Cabin</button>
+      </div>
+    `);
+    return;
+  }
+  if(state.students.length === 0){
+    openModal(`
+      <h3>No students yet</h3>
+      <p>Enrol a student first, then come back and allocate a cabin to them.</p>
+      <div class="modal-actions"><button class="mini-btn" onclick="closeModal()">OK</button></div>
+    `);
+    return;
+  }
+  const items = state.students.map(s=>{
+    const label = s.cabin ? `${escapeHtml(s.name)} (Roll #${s.rollNo}) — currently in Cabin ${s.cabin}` : `${escapeHtml(s.name)} (Roll #${s.rollNo})`;
+    return `<li><button onclick="doAssignCabin(${num}, '${s.id}')">${label}</button></li>`;
+  }).join('');
+  openModal(`
+    <h3>Allocate Cabin ${num}</h3>
+    <p>Choose a student. If they already have a cabin, it will be reassigned to this one.</p>
+    <ul class="modal-list">${items}</ul>
+    <div class="modal-actions"><button class="mini-btn" onclick="closeModal()">Cancel</button></div>
+  `);
+}
+
+async function doVacateCabin(num){
+  const occupant = state.students.find(s=>s.cabin===num);
+  if(occupant) occupant.cabin = null;
+  await saveState();
+  closeModal();
+  render();
+}
+
+async function doAssignCabin(num, studentId){
+  const student = state.students.find(s=>s.id===studentId);
+  if(!student) return;
+  state.students.forEach(s=>{ if(s.cabin===num) s.cabin = null; });
+  student.cabin = num;
+  await saveState();
+  closeModal();
+  render();
+}
+
+function renderStats(){
+  const total = state.students.length;
+  const dueList = state.students.filter(s=>studentStatus(s).days<=5);
+  const paidCycle = state.students.filter(s=>studentStatus(s).days>5).length;
+  let revenue = 0;
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate()-30);
+  state.students.forEach(s=>{
+    s.payments.forEach(p=>{
+      if(new Date(p.date+'T00:00:00') >= cutoff) revenue += p.amount;
+    });
+  });
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statPaid').textContent = paidCycle;
+  document.getElementById('statDue').textContent = dueList.length;
+  document.getElementById('statRevenue').textContent = '₹'+revenue;
+}
+
+function renderReminders(){
+  const box = document.getElementById('reminders');
+  const list = state.students
+    .map(s=>({s, st: studentStatus(s)}))
+    .filter(x=>x.st.days<=5)
+    .sort((a,b)=>a.st.days-b.st.days);
+  if(list.length===0){
+    box.innerHTML = '<div class="reminder-empty">No one is due within 5 days. All clear.</div>';
+    return;
+  }
+  box.innerHTML = list.map(({s,st})=>{
+    const dayTxt = s.payments.length===0
+      ? 'First payment pending'
+      : (st.days<0 ? `${Math.abs(st.days)} day(s) overdue` : (st.days===0? 'Due today' : `Due in ${st.days} day(s)`));
+    return `<div class="reminder-card ${st.cls==='overdue'?'':'amber'}">
+      <div class="reminder-info"><b>${escapeHtml(s.name)}</b> — Roll #${s.rollNo} · ₹${s.fee}
+        <div class="days">${dayTxt} · ${fmtDate(s.nextDue)}</div>
+      </div>
+      <a class="wa-btn" href="${waLink(s)}" target="_blank" rel="noopener">Send WhatsApp Reminder</a>
+    </div>`;
+  }).join('');
+}
+
+function renderList(){
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  const listEl = document.getElementById('studentList');
+  let students = [...state.students].sort((a,b)=>a.rollNo-b.rollNo);
+  if(q){
+    students = students.filter(s=>s.name.toLowerCase().includes(q) || s.phone.includes(q));
+  }
+  document.getElementById('countLabel').textContent = `(${students.length})`;
+  if(students.length===0){
+    listEl.innerHTML = '<div class="empty-state">No students match. Try a different search, or enrol someone above.</div>';
+    return;
+  }
+  listEl.innerHTML = students.map(s=>{
+    const st = studentStatus(s);
+    const historyRows = s.payments.slice().reverse().map((p,ri)=>{
+      const idx = s.payments.length - 1 - ri;
+      return `<tr><td>${fmtDate(p.date)}</td><td>₹${p.amount}</td><td>${invoiceNumber(s, idx)}</td><td><a href="${invoiceWaLink(s, p, idx)}" target="_blank" rel="noopener" style="color:var(--green);">Resend ↗</a></td><td><a href="#" onclick="downloadHistoryInvoice('${s.id}', ${idx}); return false;" style="color:var(--navy);">PDF ⬇</a></td></tr>`;
+    }).join('');
+    return `<div class="stub">
+      <div class="stub-roll"><span class="lbl">Roll</span><span class="num">${s.rollNo}</span></div>
+      <div class="stub-main">
+        <div class="name">${escapeHtml(s.name)}</div>
+        <div class="stub-meta">
+          <span>☎ ${s.phone}</span>
+          <span>Joined ${fmtDate(s.joinDate)}</span>
+          <span>Fee ₹${s.fee}/mo</span>
+          <span>Next due ${fmtDate(s.nextDue)}</span>
+        </div>
+        <div class="history" style="padding-left:0;border-top:none;">
+          <details><summary style="cursor:pointer;color:var(--ink-soft);">Payment history (${s.payments.length})</summary>
+            <table>${historyRows}</table>
+          </details>
+        </div>
+      </div>
+      <div class="stub-actions">
+        <div class="stamp ${st.cls}">${s.payments.length===0 ? 'First Payment Pending' : st.label}</div>
+        <div class="cabin-badge ${s.cabin?'assigned':''}">${s.cabin? 'Cabin '+s.cabin : 'No cabin'}</div>
+        <div class="btn-row">
+          <button class="mini-btn" ${st.cls==='paid' ? 'disabled title="Already paid for this cycle — reopens when the next due date is near"' : ''} onclick="markPaid('${s.id}')">${st.cls==='paid' ? 'Paid ✓' : 'Mark Paid'}</button>
+          <a class="mini-btn wa" href="${waLink(s)}" target="_blank" rel="noopener">WhatsApp</a>
+          <button class="mini-btn danger" onclick="removeStudent('${s.id}')">Remove</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function openModal(html){
+  document.getElementById('modalBox').innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.getElementById('modalBox').innerHTML = '';
+}
+document.getElementById('modalOverlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'modalOverlay') closeModal();
+});
+
+async function markPaid(id){
+  const s = state.students.find(x=>x.id===id);
+  if(!s) return;
+  const st = studentStatus(s);
+  if(st.cls === 'paid'){
+    // Already settled for this cycle — button should be disabled, but guard here too.
+    return;
+  }
+  const payment = {date: todayStr(), amount: s.fee};
+  s.payments.push(payment);
+  s.nextDue = addMonths(s.nextDue, 1);
+  await saveState();
+  render();
+
+  const paymentIndex = s.payments.length - 1;
+  downloadInvoicePDF(s, payment, paymentIndex);
+  const link = invoiceWaLink(s, payment, paymentIndex);
+  const win = window.open(link, '_blank');
+  if(!win){
+    // Popup was blocked by the browser — offer a one-tap fallback instead.
+    openModal(`
+      <h3>Payment recorded ✓</h3>
+      <p>The PDF invoice has been downloaded to your device. Your browser blocked the automatic WhatsApp popup — tap below to open WhatsApp, then attach the downloaded PDF.</p>
+      <div class="modal-actions">
+        <button class="mini-btn" onclick="closeModal()">Close</button>
+        <a class="mini-btn wa" href="${link}" target="_blank" rel="noopener" onclick="closeModal()">Send Invoice via WhatsApp</a>
+      </div>
+    `);
+  }
+}
+
+function removeStudent(id){
+  const s = state.students.find(x=>x.id===id);
+  if(!s) return;
+  openModal(`
+    <h3>Remove student?</h3>
+    <p>Remove <b>${escapeHtml(s.name)}</b> (Roll #${s.rollNo}) from the register? This cannot be undone, including their payment history.</p>
+    <div class="modal-actions">
+      <button class="mini-btn" onclick="closeModal()">Cancel</button>
+      <button class="mini-btn danger" onclick="doRemoveStudent('${id}')">Remove</button>
+    </div>
+  `);
+}
+
+async function doRemoveStudent(id){
+  state.students = state.students.filter(x=>x.id!==id);
+  await saveState();
+  closeModal();
+  render();
+}
+
+document.getElementById('addBtn').addEventListener('click', async ()=>{
+  const name = document.getElementById('fName').value.trim();
+  const phone = document.getElementById('fPhone').value.trim();
+  const join = document.getElementById('fJoin').value;
+  const fee = parseInt(document.getElementById('fFee').value, 10) || state.settings.defaultFee;
+  const cabinVal = document.getElementById('fCabin').value;
+  const cabin = cabinVal ? parseInt(cabinVal,10) : null;
+  const paidNow = document.getElementById('fPaidNow').checked;
+  const errEl = document.getElementById('formErr');
+  errEl.textContent = '';
+
+  if(!name){ errEl.textContent = 'Please enter the student\'s name.'; return; }
+  if(!/^\d{10}$/.test(phone)){ errEl.textContent = 'Please enter a valid 10-digit phone number.'; return; }
+  if(!join){ errEl.textContent = 'Please select a joining date.'; return; }
+
+  const student = {
+    id: 'stu_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+    rollNo: state.nextRoll,
+    name, phone, joinDate: join, fee, cabin,
+    payments: paidNow ? [{date: join, amount: fee}] : [],
+    nextDue: paidNow ? addMonths(join, 1) : join
+  };
+  state.students.push(student);
+  state.nextRoll += 1;
+  await saveState();
+
+  document.getElementById('fName').value='';
+  document.getElementById('fPhone').value='';
+  document.getElementById('fJoin').value = todayStr();
+  document.getElementById('fFee').value = state.settings.defaultFee;
+  document.getElementById('fPaidNow').checked = true;
+
+  render();
+
+  if(paidNow){
+    downloadInvoicePDF(student, student.payments[0], 0);
+    const link = invoiceWaLink(student, student.payments[0], 0);
+    const win = window.open(link, '_blank');
+    if(!win){
+      openModal(`
+        <h3>Student enrolled ✓</h3>
+        <p>The PDF invoice has been downloaded to your device. Your browser blocked the automatic WhatsApp popup — tap below to open WhatsApp, then attach the downloaded PDF.</p>
+        <div class="modal-actions">
+          <button class="mini-btn" onclick="closeModal()">Close</button>
+          <a class="mini-btn wa" href="${link}" target="_blank" rel="noopener" onclick="closeModal()">Send Invoice via WhatsApp</a>
+        </div>
+      `);
+    }
+  }
+});
+
+document.getElementById('searchBox').addEventListener('input', renderList);
+
+document.getElementById('settingsToggle').addEventListener('click', ()=>{
+  settingsOpen = !settingsOpen;
+  document.getElementById('settingsPanel').classList.toggle('open', settingsOpen);
+});
+
+document.getElementById('settingsSaveBtn').addEventListener('click', async ()=>{
+  state.settings.hallName = document.getElementById('sHallName').value.trim() || defaultSettings.hallName;
+  state.settings.ownerName = document.getElementById('sOwnerName').value.trim();
+  state.settings.ownerPhone = document.getElementById('sOwnerPhone').value.trim();
+  state.settings.defaultFee = parseInt(document.getElementById('sDefaultFee').value,10) || defaultSettings.defaultFee;
+  state.settings.cabinCount = Math.max(0, parseInt(document.getElementById('sCabinCount').value,10) || 0);
+  state.settings.address = document.getElementById('sAddress').value.trim();
+  await saveState();
+  render();
+  const msg = document.getElementById('settingsSavedMsg');
+  msg.classList.add('show');
+  setTimeout(()=>msg.classList.remove('show'), 2000);
+});
+
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateTag = todayStr();
+  a.href = url;
+  a.download = `study-hall-backup-${dateTag}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('importBtn').addEventListener('click', ()=>{
+  document.getElementById('importFile').click();
+});
+
+document.getElementById('importFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const incoming = JSON.parse(reader.result);
+      if(!incoming.students || !Array.isArray(incoming.students)) throw new Error('Not a valid backup file');
+      openModal(`
+        <h3>Restore from backup?</h3>
+        <p>This file has ${incoming.students.length} student record(s). Importing will <b>replace</b> everything currently in this app. This cannot be undone.</p>
+        <div class="modal-actions">
+          <button class="mini-btn" onclick="closeModal()">Cancel</button>
+          <button class="mini-btn danger" id="confirmImportBtn">Replace &amp; Import</button>
+        </div>
+      `);
+      document.getElementById('confirmImportBtn').addEventListener('click', async ()=>{
+        state = {
+          students: incoming.students,
+          nextRoll: incoming.nextRoll || (incoming.students.length + 1),
+          settings: {...defaultSettings, ...(incoming.settings || {})}
+        };
+        state.students.forEach(s=>{ if(s.cabin === undefined) s.cabin = null; });
+        await saveState();
+        populateSettingsForm();
+        render();
+        closeModal();
+      });
+    }catch(err){
+      openModal(`<h3>Import failed</h3><p>That file doesn't look like a valid backup. Please choose the JSON file downloaded from Export Data.</p><div class="modal-actions"><button class="mini-btn" onclick="closeModal()">Close</button></div>`);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+loadState();
+</script>
+</body>
+</html>
